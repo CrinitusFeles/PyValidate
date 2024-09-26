@@ -63,6 +63,12 @@ def create_dyn_model(handler: Callable | partial) -> Type[BaseModel]:
     return data['model']
 
 
+def args_to_kwargs(handler: Callable | partial, *args) -> dict[str, Any]:
+    type_hints: dict[str, Any] = _get_type_hints(handler)
+    kwargs: dict = {key: args[i] for i, key in enumerate(type_hints.keys())}
+    return kwargs
+
+
 def validate_json(func: Callable):
     @wraps(func)
     def wrapper(json_str: str):
