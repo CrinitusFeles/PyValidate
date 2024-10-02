@@ -2,6 +2,7 @@ from functools import partial, wraps
 from typing import Any, Callable, Type, get_type_hints
 from types import GenericAlias
 from pydantic import BaseModel, create_model  # noqa: F401
+from uuid import UUID  # noqa: F401
 
 
 def expand_generic_alias(alias: GenericAlias) -> str:
@@ -52,6 +53,7 @@ def _get_type_hints(handler: Callable | partial) -> dict[str, Any]:
     else:
         type_hints = get_type_hints(handler)
     type_hints.pop('return', None)
+    type_hints.pop('self', None)
     return type_hints
 
 
