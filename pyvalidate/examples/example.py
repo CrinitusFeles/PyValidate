@@ -6,15 +6,15 @@ from pyvalidate.examples.models import JsonModel, Model, MyModel
 
 
 @validate_json
-def foo(v1: list[MyModel], v2: dict[str, list[int]], v3: str, v4: int) -> None:
+def foo(v1: list[MyModel], v2: dict[str, list[int]], v3: str | int, v4: int) -> None:
     print(f'{v1[0].model_dump()}, {v2}, {v3}, {v4}\n')
 
 @validate_args
-def bar(v1: list[MyModel], v2: dict[str, list[int]], v3: str, v4: int) -> None:
+def bar(v1: list[MyModel], v2: dict[str, list[int]], v3: str | int, v4: int) -> None:
     print(f'{v1[0].model_dump()}, {v2}, {v3}, {v4}\n')
 
 
-def fn(v1: list[MyModel], v2: dict[str, list[int]], v3: str, v4: int) -> None:
+def fn(v1: list[MyModel], v2: dict[str, list[int]], v3: str | int, v4: int) -> None:
     print(f'{v1[0].model_dump()}, {v2}, {v3}, {v4}\n')
 
 
@@ -33,7 +33,7 @@ json_str = """{
         "var3":{"arg1":[1,2,3],"arg2":{"kek":"lol"}}
     }],
     "v2":{"key_1":[3,2,1],"key_2":[6]},
-    "v3":"world","v4":0}
+    "v3":123,"v4":0}
 """
 
 

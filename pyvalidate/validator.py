@@ -1,6 +1,6 @@
 from functools import partial, wraps
 from typing import Any, Callable, Type, get_type_hints
-from types import GenericAlias
+from types import GenericAlias, UnionType
 from pydantic import BaseModel, create_model  # noqa: F401
 from uuid import UUID  # noqa: F401
 
@@ -19,7 +19,7 @@ def expand_generic_alias(alias: GenericAlias) -> str:
 
 
 def extract_models(type_hints: dict) -> dict[str, type[BaseModel]]:
-    def _extract_models(type_val: GenericAlias) -> dict[str, Type[BaseModel]]:
+    def _extract_models(type_val: GenericAlias | UnionType) -> dict[str, Type[BaseModel]]:
         data: dict[str, type[BaseModel]] = {}
         for arg in type_val.__args__:
             if isinstance(arg, GenericAlias):
@@ -32,7 +32,7 @@ def extract_models(type_hints: dict) -> dict[str, type[BaseModel]]:
 
     data: dict[str, Type[BaseModel]] = {}
     for type_val in type_hints.values():
-        if isinstance(type_val, GenericAlias):
+        if isinstance(type_val, (GenericAlias, UnionType)):
             data.update(_extract_models(type_val))
         elif issubclass(type_val, BaseModel):
             data.update({type_val.__name__: type_val})
@@ -40,10 +40,15 @@ def extract_models(type_hints: dict) -> dict[str, type[BaseModel]]:
 
 
 def create_model_schema(type_hints: dict) -> str:
-    schema: str = ', '.join([f'{key}=({expand_generic_alias(val)}, ...)'
-                             if isinstance(val, GenericAlias)
-                             else f'{key}=({val.__name__}, ...)'
-                             for key, val in type_hints.items()])
+    hints = []
+    for key, val in type_hints.items():
+        if isinstance(val, GenericAlias):
+            hints.append(f'{key}=({expand_generic_alias(val)}, ...)')
+        elif isinstance(val, UnionType):
+            hints.append(f'{key}=({val}, ...)')
+        else:
+            hints.append(f'{key}=({val.__name__}, ...)')
+    schema: str = ', '.join(hints)
     return schema
 
 
