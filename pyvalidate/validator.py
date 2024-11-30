@@ -1,8 +1,10 @@
 from functools import partial, wraps
+import inspect
 from typing import Any, Callable, Type, get_type_hints
 from types import GenericAlias, UnionType
 from pydantic import BaseModel, create_model  # noqa: F401
 from uuid import UUID  # noqa: F401
+import datetime  # noqa: F401
 
 
 def expand_generic_alias(alias: GenericAlias) -> str:
@@ -39,15 +41,16 @@ def extract_models(type_hints: dict) -> dict[str, type[BaseModel]]:
     return data
 
 
-def create_model_schema(type_hints: dict) -> str:
+def create_model_schema(type_hints: dict, default_values: dict) -> str:
     hints = []
     for key, val in type_hints.items():
+        default_val = default_values.get(key, '...')
         if isinstance(val, GenericAlias):
-            hints.append(f'{key}=({expand_generic_alias(val)}, ...)')
+            hints.append(f'{key}=({expand_generic_alias(val)}, {default_val})')
         elif isinstance(val, UnionType):
-            hints.append(f'{key}=({val}, ...)')
+            hints.append(f'{key}=({val}, {default_val})')
         else:
-            hints.append(f'{key}=({val.__name__}, ...)')
+            hints.append(f'{key}=({val.__name__}, {default_val})')
     schema: str = ', '.join(hints)
     return schema
 
@@ -64,7 +67,9 @@ def _get_type_hints(handler: Callable | partial) -> dict[str, Any]:
 
 def create_dyn_model(handler: Callable | partial) -> Type[BaseModel]:
     type_hints: dict[str, Any] = _get_type_hints(handler)
-    schema: str = create_model_schema(type_hints)
+    spec = inspect.getfullargspec(handler)
+    default_values = dict(zip(spec.args[::-1], (spec.defaults or ())[::-1]))
+    schema: str = create_model_schema(type_hints, default_values)
     data: dict[str, type[BaseModel]] = extract_models(type_hints)
     exec(f"model = create_model('DynamicModel', {schema})", globals(), data)
     return data['model']

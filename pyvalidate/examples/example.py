@@ -6,15 +6,15 @@ from pyvalidate.examples.models import JsonModel, Model, MyModel
 
 
 @validate_json
-def foo(v1: list[MyModel], v2: dict[str, list[int]], v3: str | int, v4: int) -> None:
+def foo(v1: list[MyModel], v2: dict[str, list[int]], v3: str | int = 3, v4: int | None = None) -> None:
     print(f'{v1[0].model_dump()}, {v2}, {v3}, {v4}\n')
 
 @validate_args
-def bar(v1: list[MyModel], v2: dict[str, list[int]], v3: str | int, v4: int) -> None:
+def bar(v1: list[MyModel], v2: dict[str, list[int]], v3: str | int = 3, v4: int = 4) -> None:
     print(f'{v1[0].model_dump()}, {v2}, {v3}, {v4}\n')
 
 
-def fn(v1: list[MyModel], v2: dict[str, list[int]], v3: str | int, v4: int) -> None:
+def fn(v1: list[MyModel], v2: dict[str, list[int]], v3: str | int = 3, v4: int = 4) -> None:
     print(f'{v1[0].model_dump()}, {v2}, {v3}, {v4}\n')
 
 
@@ -33,7 +33,8 @@ json_str = """{
         "var3":{"arg1":[1,2,3],"arg2":{"kek":"lol"}}
     }],
     "v2":{"key_1":[3,2,1],"key_2":[6]},
-    "v3":123,"v4":0}
+    "v3":123,
+    }
 """
 
 
@@ -48,7 +49,7 @@ def check_args_validate() -> None:
     v1 = MyModel(var1='hello', var2=332,
                  var3=Model(arg1=[1, 2, 3], arg2={'kek': 'lol'}))
     try:
-        bar([v1], {'kek': [1, 2, 3]}, 'hello', 123)
+        bar([v1], {'kek': [1, 2, 3]}, 'hello')
     except ValidationError as err:
         print(f'check_args_validate error:\n{err.json(include_url=False)}')
 
