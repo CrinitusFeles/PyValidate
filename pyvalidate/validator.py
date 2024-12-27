@@ -45,6 +45,8 @@ def create_model_schema(type_hints: dict, default_values: dict) -> str:
     hints = []
     for key, val in type_hints.items():
         default_val = default_values.get(key, '...')
+        if default_val == '':
+            default_val = '\'\''
         if isinstance(val, GenericAlias):
             hints.append(f'{key}=({expand_generic_alias(val)}, {default_val})')
         elif isinstance(val, UnionType):
